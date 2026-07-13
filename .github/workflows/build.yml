@@ -1,12 +1,10 @@
-# HoloPhysics Lab 2 — Windows 11 CI/CD
+# HoloPhysics Lab 2 — Windows 11 CI/CD (v3.6)
 name: HoloPhysics Lab 2 CI
 
 on:
   push:
-    branches: [ main, develop ]
-    tags: [ 'v*' ]
-  pull_request:
     branches: [ main ]
+    tags: [ 'v*' ]
 
 env:
   BUILD_TYPE: Release
@@ -20,47 +18,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Cache vcpkg
-      id: cache-vcpkg
-      uses: actions/cache@v4
-      with:
-        path: |
-          C:/vcpkg
-          C:/vcpkg/packages
-          C:/vcpkg/downloads
-        key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-
-    - name: Setup vcpkg
-      if: steps.cache-vcpkg.outputs.cache-hit != 'true'
-      run: |
-        git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
-        & C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
-      shell: pwsh
-
-    - name: Install Dependencies
-      run: |
-        $env:PATH = "C:\vcpkg;$env:PATH"
-        vcpkg install --triplet x64-windows glfw3 glad glm imgui[core,docking-experimental,glfw-binding,opengl3-binding] implot nlohmann-json catch2
-      shell: pwsh
+    - uses: vcpkg/actions/setup-vcpkg@v1
 
     - name: Configure CMake
       run: |
-        cmake -B build -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE -DBUILD_TESTS=ON -DUSE_OPENCV=OFF
-      shell: pwsh
+        cmake -B build -G "Visual Studio 17 2022" `
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" `
+          -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE `
+          -DBUILD_TESTS=ON -DUSE_OPENCV=OFF
 
     - name: Build
       run: cmake --build build --config $env:BUILD_TYPE --parallel
-      shell: pwsh
 
     - name: Run Tests
-      run: |
-        cd build
-        ctest -C $env:BUILD_TYPE --output-on-failure --timeout 60
-      shell: pwsh
-
-    - name: Upload Artifacts
-      if: startsWith(github.ref, 'refs/tags/v')
-      uses: actions/upload-artifact@v4
-      with:
-        name: HoloPhysicsLab2
-        path: build/Release/
+      run: cd build && ctest -C $env:BUILD_TYPE --output-on-failure --timeout 60
