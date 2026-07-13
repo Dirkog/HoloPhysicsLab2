@@ -1,8 +1,7 @@
 {
   "name": "holophysics-lab-2",
   "version": "3.6.0",
-  "description": "HoloPhysics Lab 2 — Enterprise AR Physics Sandbox",
-  "homepage": "https://github.com/Dirkog/HoloPhysicsLab2",
+  "description": "HoloPhysics Lab 2 — AR Physics Sandbox",
   "license": "MIT",
   "dependencies": [
     "glfw3",
@@ -15,6 +14,5 @@
     "implot",
     "nlohmann-json",
     "catch2"
-  ],
-  "builtin-baseline": "d866a2e9e1c1f2d02fb0ffd6b08a27d7e1c1646d"
+  ]
 }
