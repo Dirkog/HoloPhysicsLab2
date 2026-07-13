@@ -205,7 +205,6 @@ add_executable(${PROJECT_NAME}
     ${XR_SOURCES}
     ${ECS_SOURCES}
     ${ECS_SYSTEMS}
-    ${QUEUE_SOURCES}
     ${AUDIO_SOURCES}
     ${SCRIPT_SOURCES}
     ${HAND_SOURCES}
@@ -218,6 +217,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+# Optional dependencies
+find_package(OpenXR CONFIG QUIET)
+find_package(lua CONFIG QUIET)
+find_package(miniaudio CONFIG QUIET)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
     glfw
     glad::glad
@@ -225,10 +229,23 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     imgui::imgui
     implot::implot
     nlohmann_json::nlohmann_json
-    openxr_loader
-    lua5.4
-    miniaudio
 )
+
+if(OpenXR_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenXR::openxr_loader)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE HOLO_HAVE_OPENXR)
+    message(STATUS "OpenXR found — XR module ENABLED")
+endif()
+if(lua_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE lua::lua)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE HOLO_HAVE_LUA)
+    message(STATUS "Lua found — Scripting module ENABLED")
+endif()
+if(miniaudio_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE miniaudio::miniaudio)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE HOLO_HAVE_AUDIO)
+    message(STATUS "Miniaudio found — Audio module ENABLED")
+endif()
 
 # Add OpenCV if available
 if(BUILD_AR_MODULE AND OpenCV_FOUND)
@@ -257,8 +274,12 @@ else()
 endif()
 
 if(USE_SANITIZERS AND NOT MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+    target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
+    target_compile_options(physics_tests PRIVATE -fsanitize=address -fno-omit-frame-pointer)
+    target_compile_options(spsc_queue_test PRIVATE -fsanitize=address -fno-omit-frame-pointer)
     target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
+    target_link_options(physics_tests PRIVATE -fsanitize=address)
+    target_link_options(spsc_queue_test PRIVATE -fsanitize=address)
 endif()
 
 # ==================== Install ====================
