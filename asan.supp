@@ -1,0 +1,18 @@
+# HoloPhysics Lab 2 — ASAN Suppressions
+# Leaks we accept (external libraries)
+leak:libglfw.so
+leak:libglad.so
+leak:libopenxr_loader.so
+leak:liblua5.4.so
+leak:libminiaudio.so
+
+# OpenGL drivers (known false positives)
+leak:libGL.so
+leak:libGLX.so
+leak:libEGL.so
+
+# ImGui font atlas allocation
+leak:imgui
+
+# vcpkg managed allocations
+leak:vcpkg

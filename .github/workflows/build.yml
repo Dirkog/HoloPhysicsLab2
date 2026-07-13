@@ -1,0 +1,109 @@
+# ============================================================
+# HoloPhysics Lab 2 — CI/CD Pipeline
+# ============================================================
+
+name: HoloPhysics Lab 2 CI
+
+on:
+  push:
+    branches: [ main, develop, release/* ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  BUILD_TYPE: Release
+  CTEST_OUTPUT_ON_FAILURE: ON
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgJsonGlob: vcpkg.json
+        additionalCachedPackages: 'glfw3 glad glm implot nlohmann-json lua miniaudio'
+    - name: Configure CMake
+      run: |
+        cmake -B build -G "Visual Studio 17 2022" `
+          -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" `
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
+          -DBUILD_TESTS=ON
+    - name: Build
+      run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+    - name: Run Tests
+      run: |
+        cd build
+        ctest -C ${{ env.BUILD_TYPE }} --output-on-failure --timeout 60
+    - name: Upload Artifacts
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: actions/upload-artifact@v4
+      with:
+        name: HoloPhysicsLab2-Windows
+        path: build/Release/*.exe
+
+  build-linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-16 lld-16 libgl1-mesa-dev xvfb
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgJsonGlob: vcpkg.json
+    - name: Configure CMake
+      run: |
+        CC=clang-16 CXX=clang++-16 \
+        cmake -B build -G "Ninja" \
+          -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+          -DBUILD_TESTS=ON
+    - name: Build
+      run: cmake --build build --config ${{ env.BUILD_TYPE }} --parallel $(nproc)
+    - name: Run Tests
+      run: |
+        cd build
+        xvfb-run ctest --output-on-failure --timeout 60
+    - name: Upload Artifacts
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: actions/upload-artifact@v4
+      with:
+        name: HoloPhysicsLab2-Linux
+        path: build/HoloPhysicsLab2
+
+  sanitizer:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Dependencies
+      run: sudo apt-get update && sudo apt-get install -y clang-16 libgl1-mesa-dev xvfb
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgJsonGlob: vcpkg.json
+    - name: Configure CMake (ASAN)
+      run: |
+        CC=clang-16 CXX=clang++-16 \
+        cmake -B build-asan -G "Ninja" \
+          -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" \
+          -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DUSE_SANITIZERS=ON
+    - name: Build
+      run: cmake --build build-asan --config Debug --parallel $(nproc)
+    - name: Run Tests with ASAN
+      run: |
+        cd build-asan
+        xvfb-run ctest --output-on-failure --timeout 120
+      env:
+        ASAN_OPTIONS: detect_leaks=1

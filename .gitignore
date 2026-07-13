@@ -1,0 +1,46 @@
+# Build artifacts
+build/
+build-*/
+out/
+dist/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.sln
+*.vcxproj*
+*.user
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Doxygen
+docs/doxygen/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+vcpkg_installed/
+
+# Compiled
+*.o
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.lib
+*.dll
+*.so
+*.dylib
+
+# Logs
+*.log
+*.trace
+*.csv
