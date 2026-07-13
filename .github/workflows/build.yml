@@ -1,4 +1,3 @@
-# HoloPhysics Lab 2 — Windows 11 CI/CD (v3.6)
 name: HoloPhysics Lab 2 CI
 
 on:
@@ -18,17 +17,27 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: vcpkg/actions/setup-vcpkg@v1
-
-    - name: Configure CMake
+    - name: Install vcpkg
       run: |
-        cmake -B build -G "Visual Studio 17 2022" `
-          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" `
-          -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE `
-          -DBUILD_TESTS=ON -DUSE_OPENCV=OFF
+        git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg --depth 1
+        C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+        echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
+        echo "C:\vcpkg" >> $env:GITHUB_PATH
+
+    - name: Cache vcpkg packages
+      uses: actions/cache@v4
+      with:
+        path: C:/vcpkg/packages
+        key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+
+    - name: Install deps
+      run: vcpkg install --triplet x64-windows glfw3 glad glm imgui[core,docking-experimental,glfw-binding,opengl3-binding] implot nlohmann-json catch2
+
+    - name: Configure
+      run: cmake -B build -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE -DBUILD_TESTS=ON
 
     - name: Build
       run: cmake --build build --config $env:BUILD_TYPE --parallel
 
-    - name: Run Tests
+    - name: Test
       run: cd build && ctest -C $env:BUILD_TYPE --output-on-failure --timeout 60
