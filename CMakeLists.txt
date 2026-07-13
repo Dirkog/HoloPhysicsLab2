@@ -128,12 +128,19 @@ if(BUILD_TESTS)
         tests/test_collisions.cpp
         tests/test_integrators.cpp
     )
-    target_include_directories(physics_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+    target_include_directories(physics_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    )
     target_link_libraries(physics_tests PRIVATE ${TEST_DEPS})
     add_test(NAME PhysicsTests COMMAND physics_tests)
 
     add_executable(spsc_queue_test tests/test_spsc_queue.cpp)
-    target_include_directories(spsc_queue_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(spsc_queue_test PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    target_link_libraries(spsc_queue_test PRIVATE ${TEST_DEPS})
     add_test(NAME SPSCQueueTest COMMAND spsc_queue_test)
 endif()
 
