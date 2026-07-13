@@ -31,7 +31,7 @@ jobs:
         key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
 
     - name: Install deps
-      run: vcpkg install --triplet x64-windows glfw3 glad glm imgui[core,docking-experimental,glfw-binding,opengl3-binding] implot nlohmann-json catch2
+      run: vcpkg install --triplet x64-windows glfw3 glad glm imgui[docking-experimental,glfw-binding,opengl3-binding] implot nlohmann-json catch2
 
     - name: Configure
       run: cmake -B build -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE -DBUILD_TESTS=ON
