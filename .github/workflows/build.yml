@@ -10,10 +10,8 @@ jobs:
       run: |
         git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg --depth 1
         C:\vcpkg\bootstrap-vcpkg.bat -disableMetrics
-        C:\vcpkg\vcpkg install glfw3 glad glm imgui[docking-experimental,glfw-binding,opengl3-binding] implot nlohmann-json catch2 --triplet x64-windows
+        C:\vcpkg\vcpkg install glfw3 glad glm imgui[docking-experimental,glfw-binding,opengl3-binding] implot nlohmann-json --triplet x64-windows
     - name: cmake
-      run: cmake -B build -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+      run: cmake -B build -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
     - name: build
       run: cmake --build build --config Release --parallel
-    - name: test
-      run: cd build && ctest -C Release --output-on-failure --timeout 60

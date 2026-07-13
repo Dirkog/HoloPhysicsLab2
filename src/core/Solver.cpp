@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include "Solver.h"
 #include <cmath>
 #include <cstring>
@@ -517,9 +519,9 @@ void PhysicsSystem::apply_cohesion(std::vector<Body>& bodies, double strength) {
 void PhysicsSystem::apply_springs(std::vector<Body>& bodies,
                                    const std::vector<SpringConstraint>& springs) {
     for (const auto& sp : springs) {
-        auto* a = std::find_if(bodies.begin(), bodies.end(), 
+        auto a = std::find_if(bodies.begin(), bodies.end(), 
                                [&](const Body& b) { return b.id == sp.body_a; });
-        auto* b = std::find_if(bodies.begin(), bodies.end(),
+        auto b = std::find_if(bodies.begin(), bodies.end(),
                                [&](const Body& b) { return b.id == sp.body_b; });
         if (a == bodies.end() || b == bodies.end()) continue;
         

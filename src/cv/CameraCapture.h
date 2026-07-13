@@ -6,7 +6,9 @@
 // Thread-safe double buffering, автоконвертация BGR→RGB
 // ============================================================
 
+#ifdef HOLO_HAVE_OPENCV
 #include <opencv2/opencv.hpp>
+#endif
 #include <atomic>
 #include <thread>
 #include <functional>
